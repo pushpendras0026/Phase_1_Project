@@ -25,7 +25,21 @@ def load_volume(path):
         affine  : 4x4 affine matrix from the NIfTI header
         spacing : tuple (sx, sy, sz) — voxel size in mm
     """
-    pass
+    # Load the file
+    img = nib.load(path)
+    
+    # Reorient to standard axes so axis-2 is always axial (z)
+    img = nib.as_closest_canonical(img)
+    
+    # Get the numpy array
+    vol = img.get_fdata().astype(np.float32)
+    
+    # Read voxel spacing in mm from the header
+    spacing = tuple(float(z) for z in img.header.get_zooms()[:3])
+    print(f"Loaded volume spacing: {spacing}")
+    
+    # Return (vol, img.affine, spacing)
+    return vol, img.affine, spacing
 
 
 def apply_hu_window(vol, lo=-150, hi=250, as_uint8=True):
@@ -47,7 +61,17 @@ def apply_hu_window(vol, lo=-150, hi=250, as_uint8=True):
     Returns:
         Windowed array, same shape as vol
     """
-    pass
+    # Clip to the HU window bounds
+    v = np.clip(vol, lo, hi)
+    
+    # Rescale to [0, 1]
+    v = (v - lo) / (hi - lo)
+    
+    # Return as uint8 or float32
+    if as_uint8:
+        return (v * 255).astype(np.uint8)
+    else:
+        return v.astype(np.float32)
 
 
 def to_rgb(slice2d_u8):
@@ -67,7 +91,8 @@ def to_rgb(slice2d_u8):
     Returns:
         uint8 array of shape (H, W, 3)
     """
-    pass
+    # Add channel dimension and repeat 3 times
+    return np.repeat(slice2d_u8[..., None], 3, axis=2)
 
 
 def resample_isotropic(vol, spacing, target=1.5, order=1):
@@ -91,4 +116,11 @@ def resample_isotropic(vol, spacing, target=1.5, order=1):
     Returns:
         resampled volume, new spacing tuple (target, target, target)
     """
-    pass
+    # Compute zoom factors
+    factors = [s / target for s in spacing]
+    
+    # Apply zoom with the specified interpolation order
+    resampled = zoom(vol, factors, order=order)
+    
+    # Return resampled volume with new isotropic spacing
+    return resampled, (target, target, target)
