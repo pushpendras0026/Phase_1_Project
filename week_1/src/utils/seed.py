@@ -1,5 +1,3 @@
-# [Week 1] — implement the TODO functions below and replace this stub.
-# Template: week_1/src/utils/seed.py
 import torch
 import numpy as np
 import random

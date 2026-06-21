@@ -1,5 +1,3 @@
-# [Week 1] — implement the TODO functions below and replace this stub.
-# Template: week_1/src/data/nifti_io.py
 import nibabel as nib
 import numpy as np
 from scipy.ndimage import zoom
